@@ -1,0 +1,346 @@
+<!-- 在這裡貼上你的 HTML，或點『載入範<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🧡 HTML 預覽器｜阿貴校長小助手</title>
+
+  <!-- 單檔版：不依賴外部 CSS；此區為「Bootswatch 風格靈感」主題（暖色系） -->
+  <style>
+    /* ====== 基礎設定：字型/盒模型/RWD 安全寬度 ====== */
+    :root{
+      --bg:#fff7f0;
+      --card:#ffffff;
+      --text:#5c3b2e;
+      --muted:#8d6e63;
+      --primary:#ff7043;   /* 主色：暖橘 */
+      --primary-700:#f4511e;
+      --accent:#ffd54f;    /* 點綴：暖黃 */
+      --ok:#43a047;
+      --warn:#fdd835;
+      --danger:#e53935;
+      --shadow:0 10px 25px rgba(0,0,0,.08);
+      --radius:18px;
+    }
+    *{ box-sizing:border-box; }
+    input, select, textarea{ max-width:100%; }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background:linear-gradient(180deg, var(--bg), #fff9f3 45%, #fff);
+      font-family:"Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans TC", sans-serif;
+      color:var(--text);
+    }
+
+    /* ====== 版面：上方導覽 + 主區（RWD：手機直欄、桌機雙欄） ====== */
+    .topbar{
+      position:sticky; top:0; z-index:5;
+      background: #ffffffcc;
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid #f3e0d7;
+    }
+    .bar-wrap{
+      max-width:1200px; margin:auto; padding:12px 16px;
+      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; font-weight:800;
+      color:var(--primary-700);
+      letter-spacing:.5px;
+    }
+    .brand .logo{
+      width:36px; height:36px; border-radius:50%;
+      display:grid; place-items:center;
+      background: radial-gradient(ellipse at top, var(--accent), #ffc06b);
+      box-shadow: var(--shadow);
+      font-size:20px;
+    }
+
+    .toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-left:auto; }
+
+    .btn{
+      border:none; padding:10px 14px; border-radius:14px; cursor:pointer;
+      background:var(--primary); color:#fff; font-weight:700;
+      box-shadow: 0 6px 16px rgba(244,81,30,.25);
+      transition:.2s transform, .2s box-shadow, .2s background;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn:hover{ transform:translateY(-1px); box-shadow:0 10px 22px rgba(244,81,30,.28); background:var(--primary-700); }
+    .btn.ghost{ background:#fff; color:var(--muted); border:1px solid #efdcd3; box-shadow:none; }
+    .btn.ghost:hover{ background:#fff7f0; }
+    .btn.ok{ background:var(--ok); box-shadow:0 6px 16px rgba(67,160,71,.25); }
+    .btn.warn{ background:var(--warn); color:#7a5b00; }
+    .btn.danger{ background:var(--danger); }
+
+    .main{
+      max-width:1200px; margin:18px auto; padding:0 16px 24px;
+      display:grid; gap:16px;
+      grid-template-columns:1fr; /* 手機直欄 */
+    }
+    @media(min-width:980px){
+      .main{ grid-template-columns:1fr 1fr; } /* 桌機雙欄 */
+    }
+
+    /* ====== 卡片 ====== */
+    .card{
+      background:var(--card);
+      border:1px solid #f1e0d7;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex; flex-direction:column;
+    }
+    .card-header{
+      padding:14px 16px; display:flex; align-items:center; gap:10px;
+      background:linear-gradient(180deg, #fff, #fff7f1 70%);
+      border-bottom:1px solid #f3e0d7;
+      font-weight:800; color:#6b3b2e;
+    }
+    .card-body{ padding:16px; }
+    .muted{ color:#896b5f; }
+
+    /* ====== 編輯器區 ====== */
+    .editor-wrap{ display:flex; flex-direction:column; gap:10px; height:100%; }
+    .code-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    textarea#editor{
+      width:100%; min-height:380px; resize:vertical;
+      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      line-height:1.5; font-size:14px; padding:14px 16px;
+      border:1px dashed #e7c9bc; border-radius:14px; background:#fffdfb;
+      outline:none;
+    }
+    textarea#editor:focus{ border-color:#ffb199; box-shadow:0 0 0 4px #ffe3d9; }
+
+    /* 拖拉上傳區提示 */
+    .dropzone{
+      border:2px dashed #ffb199; border-radius:14px; padding:12px; text-align:center;
+      background:#fff6f0; color:#a06652; font-weight:700;
+    }
+    .dropzone.dragover{ background:#ffe9df; }
+
+    /* ====== 預覽區 ====== */
+    .preview-frame{
+      width:100%; height:480px; border:none; border-top:1px solid #f3e0d7;
+      background:#fff; border-radius:12px;
+    }
+    .frame-tools{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+
+    /* ====== 小徽章/提示 ====== */
+    .badge{
+      display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:800;
+      background:#fff3cd; color:#7a5b00; border:1px solid #f6e1a6;
+    }
+
+    /* ====== 小字說明 ====== */
+    .help{
+      font-size:13px; line-height:1.6; color:#7b5f55;
+    }
+  </style>
+</head>
+<body>
+  <!-- ====== 頂端工具列 ====== -->
+  <header class="topbar">
+    <div class="bar-wrap">
+      <div class="brand">
+        <div class="logo">🧡</div>
+        <div>HTML 預覽器 <span class="badge">SandBox</span></div>
+      </div>
+
+      <div class="toolbar">
+        <!-- 主要執行按鈕 -->
+        <button class="btn" id="runBtn">🚀 執行</button>
+        <button class="btn ghost" id="openSampleBtn">📄 載入範例</button>
+        <label class="btn ghost" for="fileInput" style="cursor:pointer;">📂 載入 .html<input id="fileInput" type="file" accept=".html,text/html" hidden></label>
+        <button class="btn ok" id="downloadBtn">💾 下載</button>
+        <button class="btn warn" id="copyBtn">📋 複製</button>
+        <button class="btn danger" id="clearBtn">🧹 清空</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====== 主體：左編右預覽 ====== -->
+  <main class="main">
+    <!-- 左：編輯器卡片 -->
+    <section class="card">
+      <div class="card-header">📝 程式編輯區</div>
+      <div class="card-body">
+        <div class="dropzone" id="dropzone">把 .html 檔拖進來，或直接在下方貼上 HTML / CSS / JS 內容</div>
+        <div class="editor-wrap" style="margin-top:10px;">
+          <textarea id="editor" spellcheck="false" placeholder="在這裡貼上完整的 HTML（可包含 &lt;style&gt; 與 &lt;script&gt;）"></textarea>
+          <div class="code-actions">
+            <button class="btn" id="runBtn2">▶️ 執行預覽</button>
+            <button class="btn ghost" id="beautifyBtn">✨ 簡易排版</button>
+          </div>
+          <p class="help">提示：此預覽器使用 <b>iframe sandbox</b> 隔離預覽內容（允許 script / modals），避免影響本頁功能。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右：預覽卡片 -->
+    <section class="card">
+      <div class="card-header">👀 即時預覽區</div>
+      <div class="card-body">
+        <div class="frame-tools">
+          <button class="btn ghost" id="openNewTabBtn">🪟 另開視窗</button>
+          <span class="muted">預覽尺寸固定 480px 高，內容超出可自行捲動。</span>
+        </div>
+        <iframe id="preview" class="preview-frame"
+                sandbox="allow-scripts allow-modals allow-forms allow-popups allow-pointer-lock allow-same-origin"
+                srcdoc="<!-- 按上方『執行』即可預覽 -->">
+        </iframe>
+      </div>
+    </section>
+  </main>
+
+  <!-- ====== 互動腳本 ====== -->
+  <script>
+    // 取得元素
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const runBtn = document.getElementById('runBtn');
+    const runBtn2 = document.getElementById('runBtn2');
+    const openSampleBtn = document.getElementById('openSampleBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const openNewTabBtn = document.getElementById('openNewTabBtn');
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const beautifyBtn = document.getElementById('beautifyBtn');
+
+    /* ========== 1) 執行預覽：把 textarea 內容塞進 iframe 的 srcdoc ========== */
+    function runPreview(){
+      const code = editor.value || "<!doctype html><html><body><h2>（沒有內容）</h2><p>請貼上你的 HTML 後再按『執行』！</p></body></html>";
+      preview.srcdoc = code;
+      // 小動畫提示
+      preview.style.transition = '.2s filter'; preview.style.filter='contrast(1.15)';
+      setTimeout(()=>preview.style.filter='contrast(1)', 200);
+    }
+    runBtn.addEventListener('click', runPreview);
+    runBtn2.addEventListener('click', runPreview);
+
+    /* ========== 2) 另開視窗：用 data URL 打開目前內容 ========== */
+    openNewTabBtn.addEventListener('click', ()=>{
+      const code = editor.value || "";
+      const blob = new Blob([code], {type:"text/html;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      // 註：使用 Blob URL 可避免網址過長與編碼困擾
+    });
+
+    /* ========== 3) 載入範例：提供一份簡單可互動的 HTML ========== */
+    const sampleHTML =
+`<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>我的小卡片</title>
+<style>
+  body{font-family:"Microsoft JhengHei",sans-serif;background:#fff3e0;margin:0;display:grid;place-items:center;height:100vh;}
+  .card{background:#fff;border:1px solid #ffe0b2;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,.08);padding:24px;max-width:420px}
+  .title{font-weight:900;color:#e65100;margin:0 0 10px 0}
+  .btn{border:none;background:#ff7043;color:#fff;padding:10px 14px;border-radius:12px;font-weight:800;cursor:pointer}
+  .btn:hover{background:#f4511e}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2 class="title">🍊 Hello HTML Preview!</h2>
+    <p>這是從預覽器載入的範例，你可以修改文字或樣式後再按「執行」。</p>
+    <button class="btn" onclick="alert('Hi!')">點我一下</button>
+  </div>
+</body>
+</html>`;
+    openSampleBtn.addEventListener('click', ()=>{
+      editor.value = sampleHTML;
+      runPreview();
+    });
+
+    /* ========== 4) 載入本機 HTML 檔 ========== */
+    fileInput.addEventListener('change', (e)=>{
+      const file = e.target.files?.[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        editor.value = reader.result;
+        runPreview();
+      };
+      reader.readAsText(file, 'utf-8');
+    });
+
+    /* 也支援拖拉到 dropzone */
+    function setDragOver(on){
+      dropzone.classList.toggle('dragover', !!on);
+      dropzone.textContent = on ? "放開滑鼠即可載入 .html 檔" : "把 .html 檔拖進來，或直接在下方貼上 HTML / CSS / JS 內容";
+    }
+    ['dragenter','dragover'].forEach(evt=>{
+      dropzone.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); setDragOver(true); });
+    });
+    ['dragleave','drop'].forEach(evt=>{
+      dropzone.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); setDragOver(false); });
+    });
+    dropzone.addEventListener('drop', (e)=>{
+      const file = e.dataTransfer?.files?.[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{ editor.value = reader.result; runPreview(); };
+      reader.readAsText(file, 'utf-8');
+    });
+
+    /* ========== 5) 下載目前編輯內容成 .html 檔 ========== */
+    downloadBtn.addEventListener('click', ()=>{
+      const code = editor.value || '';
+      const blob = new Blob([code], {type:"text/html;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = "my_preview.html";
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    /* ========== 6) 一鍵複製程式碼 ========== */
+    copyBtn.addEventListener('click', async ()=>{
+      try{
+        await navigator.clipboard.writeText(editor.value||'');
+        copyBtn.textContent = "✅ 已複製";
+        setTimeout(()=>copyBtn.textContent="📋 複製", 1200);
+      }catch(err){
+        alert("複製失敗，請手動選取內容後 Ctrl/Cmd + C。");
+      }
+    });
+
+    /* ========== 7) 清空編輯器 ========== */
+    clearBtn.addEventListener('click', ()=>{
+      if(confirm("確定要清空編輯器內容嗎？")){ editor.value=''; preview.srcdoc=""; }
+    });
+
+    /* ========== 8) 簡易排版：僅做縮排/清理（非嚴格 beautify） ========== */
+    function simpleBeautify(html){
+      // 非嚴格：僅做基本換行與縮排，避免破壞 script 內容
+      // 註解：若需要更完整的排版，可再整合線上 formatter；這裡保持單檔無外部依賴
+      try{
+        const lines = (html||'').split('\n');
+        let indent=0, out=[];
+        const openTag = /<([A-Za-z][^\s/>]*)[^>]*?(?<!\/)>/;
+        const closeTag = /<\/\s*([A-Za-z][^>]*)>/;
+        for(let raw of lines){
+          let line = raw.trim();
+          if(closeTag.test(line)){ indent = Math.max(0, indent-1); }
+          out.push('  '.repeat(indent)+line);
+          if(openTag.test(line) && !/\/>|<!|<meta|<link|<img|<input|<br/i.test(line)){ indent++; }
+        }
+        return out.join('\n');
+      }catch(e){ return html; }
+    }
+    beautifyBtn.addEventListener('click', ()=>{
+      editor.value = simpleBeautify(editor.value);
+    });
+
+    // 預放一段提示文字，幫助新手上手
+    editor.value = "<!-- 在這裡貼上你的 HTML，或點『載入範例』，再按『執行』預覽吧！ -->";
+  </script>
+</body>
+</html>
+例』，再按『執行』預覽吧！ -->
